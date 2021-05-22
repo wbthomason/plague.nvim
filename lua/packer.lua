@@ -10,6 +10,7 @@ local log = require('packer.log')
 local luarocks = require('packer.luarocks')
 local plugin_types = require('packer.plugin_types')
 local plugin_utils = require('packer.plugin_utils')
+local snapshot = require('packer.snapshot')
 local update = require('packer.update')
 local util = require('packer.util')
 
@@ -96,7 +97,7 @@ packer.init = function(user_config)
   config.start_dir = util.join_paths(config.pack_dir, 'start')
 
   for _, mod in ipairs({
-    clean, compile, display, handlers, install, plugin_types, plugin_utils, update, luarocks, log
+    clean, compile, display, handlers, install, plugin_types, plugin_utils, update, luarocks, log, snapshot
   }) do mod.cfg(config) end
 
   plugin_utils.ensure_dirs()
@@ -524,22 +525,19 @@ end
 -- Given a list of plugins it will only snapshot said plugins,
 -- otherwise it will snapshot all plugins (except for disabled)
 packer.snapshot = function (filename)
-    filename = filename or "placeholder"
-    print("filename: " .. filename)
-
-    log.info("Taking snapshots of currently installed plugins...")
     async(function()
+        filename = filename or "placeholder"
+        log.info(string.format("Taking snapshots of currently installed plugins to %s...", filename))
         local start_time = vim.fn.reltime()
-        local results = {}
-
+        await(snapshot(filename, plugins))
         await(a.main)
-        local delta = string.gsub(vim.fn.reltimestr(vim.fn.reltime(start_time)), ' ', '')
+        --await(a.main)
+        --local delta = string.gsub(vim.fn.reltimestr(vim.fn.reltime(start_time)), ' ', '')
         --print(string.format("delta: %s", delta))
+        log.info("Snapshot complete")
         packer.on_complete()
     end)()
 
-    log.info("Snapshot complete")
-    packer.on_complete()
 end
 
 packer.config = config
