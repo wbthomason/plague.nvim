@@ -102,6 +102,7 @@ packer.init = function(user_config)
   plugin_utils.ensure_dirs()
 
   if not config.disable_commands then
+    vim.cmd [[command! PackerSnapshot  lua require('packer').snapshot()]]
     vim.cmd [[command! PackerInstall  lua require('packer').install()]]
     vim.cmd [[command! PackerUpdate   lua require('packer').update()]]
     vim.cmd [[command! PackerSync     lua require('packer').sync()]]
@@ -517,6 +518,60 @@ packer.loader_complete = function(lead, _, _)
   end
   table.sort(completion_list)
   return completion_list
+end
+
+-- Snapshot installed plugins
+-- Given a list of plugins it will only snapshot said plugins,
+-- otherwise it will snapshot all plugins (except for disabled)
+packer.snapshot = function (...)
+    local snapshot_args = args_or_all(...)
+    for index, value in ipairs(snapshot_args) do
+        print(value)
+    end
+    print(snapshot_args)
+
+    log.info("Taking snapshots of currently installed plugins...")
+    async(function()
+        local start_time = vim.fn.reltime()
+        local results = {}
+        await(clean(plugins, results))
+        local missing_plugins, installed_plugins = util.partition(
+            plugin_utils.find_missing_plugins(plugins),
+            update_plugins)
+
+        update.fix_plugin_types(plugins, missing_plugins, results)
+        local _
+        _, missing_plugins = util.partition(vim.tbl_keys(results.moves), missing_plugins)
+        local tasks, display_win = install(plugins, missing_plugins, results)
+        local update_tasks
+        update_tasks, display_win = update(plugins, installed_plugins, display_win, results)
+        vim.list_extend(tasks, update_tasks)
+        local luarocks_ensure_task = luarocks.ensure(rocks, results, display_win)
+        if luarocks_ensure_task ~= nil then table.insert(tasks, luarocks_ensure_task) end
+        table.insert(tasks, 1, function() return not display.status.running end)
+        table.insert(tasks, 1, config.max_jobs and config.max_jobs or (#tasks - 1))
+        display_win:update_headline_message('updating ' .. #tasks - 2 .. ' / ' .. #tasks - 2
+            .. ' plugins')
+        a.interruptible_wait_pool(unpack(tasks))
+        local install_paths = {}
+        for plugin_name, r in pairs(results.installs) do
+            if r.ok then table.insert(install_paths, results.plugins[plugin_name].install_path) end
+        end
+
+        for plugin_name, r in pairs(results.updates) do
+            if r.ok then table.insert(install_paths, results.plugins[plugin_name].install_path) end
+        end
+
+        await(a.main)
+        plugin_utils.update_helptags(install_paths)
+        plugin_utils.update_rplugins()
+        local delta = string.gsub(vim.fn.reltimestr(vim.fn.reltime(start_time)), ' ', '')
+        display_win:final_results(results, delta)
+        packer.on_complete()
+    end)()
+
+    log.info("Snapshot complete")
+    packer.on_complete()
 end
 
 packer.config = config
