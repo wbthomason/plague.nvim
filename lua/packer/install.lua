@@ -32,6 +32,9 @@ local function install_plugin(plugin, display_win, results)
 end
 
 local function do_install(_, plugins, missing_plugins, results)
+    for index, value in ipairs(plugins) do
+        print(fmt("index: %s, value: %s", index, value))
+    end
   results = results or {}
   results.installs = results.installs or {}
   results.plugins = results.plugins or {}

@@ -526,9 +526,9 @@ end
 -- otherwise it will snapshot all plugins (except for disabled)
 packer.snapshot = function (filename)
     async(function()
+        local start_time = vim.fn.reltime()
         filename = filename or "placeholder"
         log.info(string.format("Taking snapshots of currently installed plugins to %s...", filename))
-        local start_time = vim.fn.reltime()
         await(snapshot(filename, plugins))
         await(a.main)
         --await(a.main)
@@ -590,6 +590,7 @@ packer.startup = function(spec)
     end
   else
     packer.use(user_plugins)
+
   end
 
   return packer

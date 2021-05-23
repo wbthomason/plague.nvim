@@ -331,6 +331,31 @@ git.setup = function(plugin)
     end)()
     return r
   end
+
+  plugin.get_rev = function ()
+    return async(function()
+      local get_rev_cmd = config.exec_cmd .. fmt(config.subcommands.get_rev, install_to)
+      local r = await(jobs.run(get_rev_cmd, {capture_output = true})):
+        map_ok(function(ok)
+          return ok.output.data.stdout[1]
+        end):
+        map_err(function(err)
+          if not err.msg then
+            return {
+              msg = fmt('Error getting commit from %s: %s', plugin_name, table.concat(err, '\n')),
+              data = err,
+            }
+          end
+          return err
+        end)
+      return r
+      end)
+  end
+--  plugin.reset = function (commit)
+--    async(function ()
+--        local reset_cmd = config.exec_cmd .. fmt(config.subcommands.reset, install_to)
+--    end)
+--  end
 end
 
 return git
