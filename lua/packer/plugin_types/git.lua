@@ -351,11 +351,6 @@ git.setup = function(plugin)
       return r
       end)
   end
---  plugin.reset = function (commit)
---    async(function ()
---        local reset_cmd = config.exec_cmd .. fmt(config.subcommands.reset, install_to)
---    end)
---  end
 end
 
 return git

@@ -26,9 +26,10 @@ property: type
 --- @return function
 local function do_snapshot(_, filename, plugins)
   return async(function()
-    local snapshot_content = ""
+    local raw_snapshot = ""
     local opt, start = plugin_utils.list_installed_plugins()
     local installed = {}
+
     for key, _ in pairs(opt) do
       installed[key] = key
     end
@@ -44,18 +45,17 @@ local function do_snapshot(_, filename, plugins)
         if r == nil then
           log.warning(fmt("Snapshotting %s failed", plugin.short_name))
         else
-          snapshot_content = snapshot_content .. plugin.short_name .. ' ' .. r.ok .. "\n"
+          raw_snapshot = raw_snapshot .. plugin.short_name .. ' ' .. r.ok .. "\n"
         end
       end
     end
-    print(snapshot_content)
 
     local file = io.open(filename, "w+")
-
-    file:write(snapshot_content)
+    file:write(raw_snapshot)
     file:close()
   end)
 end
 
 local snapshot = setmetatable({cfg = cfg}, {__call = do_snapshot})
+
 return snapshot
