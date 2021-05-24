@@ -84,15 +84,37 @@ local config_defaults = {
 local config = vim.tbl_extend('force', {}, config_defaults)
 local plugins = nil
 local rocks = nil
+local plugins_snapshot = {}
+
+--- Loads and parse snapshot file in the global variable plugins_snapshot
+--@param filename path/to/snapshot
+packer.load_snapshot = function (filename)
+  local f_snapshot, err = io.open(filename, 'r+')
+
+  if err ~= nil then
+    print(err)
+    log.info(err)
+  else
+    for line in f_snapshot:lines() do
+      local short_name, commit = unpack(vim.split(line, ' '))
+      plugins_snapshot[short_name] = commit
+    end
+    f_snapshot:close()
+  end
+end
 
 --- Initialize packer
 -- Forwards user configuration to sub-modules, resets the set of managed plugins, and ensures that
 -- the necessary package directories exist
 packer.init = function(user_config)
   user_config = user_config or {}
+
+  if user_config.snapshot ~= nil then
+    packer.load_snapshot(user_config.snapshot)
+  end
+
   config = util.deep_extend('force', config, user_config)
   packer.reset()
-  print(config.snapshot)
   config.package_root = vim.fn.fnamemodify(config.package_root, ':p')
   local _
   config.package_root, _ = string.gsub(config.package_root, util.get_separator() .. '$', '', 1)
@@ -186,6 +208,8 @@ manage = function(plugin)
   plugin.short_name = name
   plugin.name = path
   plugin.path = path
+
+  plugin.commit = plugins_snapshot[plugin.short_name]
 
   -- Some config keys modify a plugin type
   if plugin.opt then
@@ -531,7 +555,6 @@ end
 packer.snapshot = function (filename)
     async(function()
         --local start_time = vim.fn.reltime()
-        filename = filename or "placeholder"
         log.info(string.format("Taking snapshots of currently installed plugins to %s...", filename))
         await(snapshot(filename, plugins))
         await(a.main)
@@ -595,7 +618,6 @@ packer.startup = function(spec)
     packer.use(user_plugins)
 
   end
-
   return packer
 end
 
