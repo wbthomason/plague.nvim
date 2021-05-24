@@ -28,6 +28,7 @@ local packer = {}
 ---@class Config
 local config_defaults = {
   snapshot = nil,
+  snapshot_path = util.join_paths(vim.fn.stdpath('config'), 'plugin'),
   ensure_dependencies = true,
   package_root = util.join_paths(vim.fn.stdpath('data'), 'site', 'pack'),
   compile_path = util.join_paths(vim.fn.stdpath('config'), 'plugin', 'packer_compiled.vim'),
@@ -108,12 +109,12 @@ end
 -- the necessary package directories exist
 packer.init = function(user_config)
   user_config = user_config or {}
+  config = util.deep_extend('force', config, user_config)
 
   if user_config.snapshot ~= nil then
-    packer.load_snapshot(user_config.snapshot)
+    packer.load_snapshot(util.join_paths(config.snapshot_path, config.snapshot))
   end
 
-  config = util.deep_extend('force', config, user_config)
   packer.reset()
   config.package_root = vim.fn.fnamemodify(config.package_root, ':p')
   local _
@@ -553,16 +554,17 @@ end
 -- Given a list of plugins it will only snapshot said plugins,
 -- otherwise it will snapshot all plugins (except for disabled)
 packer.snapshot = function (filename)
-    async(function()
-        --local start_time = vim.fn.reltime()
-        log.info(string.format("Taking snapshots of currently installed plugins to %s...", filename))
-        await(snapshot(filename, plugins))
-        await(a.main)
-        --local delta = string.gsub(vim.fn.reltimestr(vim.fn.reltime(start_time)), ' ', '')
-        --print(string.format("delta: %s", delta))
-        log.info("Snapshot complete")
-        packer.on_complete()
-    end)()
+  async(function()
+    --local start_time = vim.fn.reltime()
+    log.info(string.format("Taking snapshots of currently installed plugins to %s...", filename))
+    filename = util.join_paths(config.snapshot_path, filename)
+    await(snapshot(filename, plugins))
+    await(a.main)
+    --local delta = string.gsub(vim.fn.reltimestr(vim.fn.reltime(start_time)), ' ', '')
+    --print(string.format("delta: %s", delta))
+    log.info("Snapshot complete")
+    packer.on_complete()
+  end)()
 
 end
 
