@@ -1,5 +1,6 @@
 # CHANGELOG
 - Added PackerSnapshot command to take snapshots of all installed plugins.
+- Added ```snapshot ``` and ```snapshot_path ``` fields to ```config```
 - To restore a snapshot you have to create create your own config file, i.e.
 ```
     return packer.startup({function(use)
