@@ -192,6 +192,7 @@ git.setup = function(plugin)
 
   local needs_checkout = plugin.tag ~= nil or plugin.commit ~= nil or plugin.branch ~= nil
 
+
   plugin.installer = function(disp)
     local output = jobs.output_table()
     local callbacks = {

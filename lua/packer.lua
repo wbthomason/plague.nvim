@@ -704,7 +704,6 @@ packer.startup = function(spec)
   if config.snapshot ~= nil then
     packer.rollback(config.snapshot)
   end
-
   return packer
 end
 
