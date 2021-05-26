@@ -1,4 +1,4 @@
---- A simple Result<V, E> type to simplify control flow with installers and updaters
+-- A simple Result<V, E> type to simplify control flow with installers and updaters
 
 local result = {}
 

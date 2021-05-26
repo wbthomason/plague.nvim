@@ -93,7 +93,6 @@ packer.load_snapshot = function (filename)
   local f_snapshot, err = io.open(filename, 'r+')
 
   if err ~= nil then
-    print(err)
     log.info(err)
   else
     for line in f_snapshot:lines() do
@@ -550,22 +549,16 @@ packer.loader_complete = function(lead, _, _)
   return completion_list
 end
 
--- Snapshot installed plugins
--- Given a list of plugins it will only snapshot said plugins,
--- otherwise it will snapshot all plugins (except for disabled)
+--- Snapshot installed plugins
+---@param filename string
 packer.snapshot = function (filename)
   async(function()
-    --local start_time = vim.fn.reltime()
     log.info(string.format("Taking snapshots of currently installed plugins to %s...", filename))
     filename = util.join_paths(config.snapshot_path, filename)
     await(snapshot(filename, plugins))
-    await(a.main)
-    --local delta = string.gsub(vim.fn.reltimestr(vim.fn.reltime(start_time)), ' ', '')
-    --print(string.format("delta: %s", delta))
     log.info("Snapshot complete")
     packer.on_complete()
   end)()
-
 end
 
 packer.config = config
