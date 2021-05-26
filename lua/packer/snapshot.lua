@@ -6,23 +6,23 @@ local log = require('packer.log')
 local plugin_utils = require('packer.plugin_utils')
 
 local function cfg(_config) config = _config end
---[[
-property: 1
-property: diff
-property: short_name
-property: path
-property: install_path
-property: installer
-property: updater
-property: name
-property: url
-property: revert_last
-property: type
---]]
+---@class Plugin
+---@field 1 string
+---@field commit string
+---@field diff string
+---@field short_name string
+---@field path string
+---@field install_path string
+---@field updater function
+---@field name string
+---@field url string
+---@field revert_last function
+---@field get_rev function
+---@field type string
 
 --- Makes a snapshot of all plugins to the path specified by filename
 --- @param filename string
---- @param plugins table<string, any>
+--- @param plugins Plugin[]
 --- @return function
 local function do_snapshot(_, filename, plugins)
   return async(function()
