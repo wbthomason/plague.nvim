@@ -548,13 +548,14 @@ packer.loader_complete = function(lead, _, _)
   return completion_list
 end
 
---- Snapshot installed plugins
+---Snapshot installed plugins
 ---@param filename string
 packer.snapshot = function (filename)
   async(function()
     log.info(string.format("Taking snapshots of currently installed plugins to %s...", filename))
     filename = util.join_paths(config.snapshot_path, filename)
     await(snapshot(filename, plugins))
+    await(a.main)
     log.info("Snapshot complete")
     packer.on_complete()
   end)()
