@@ -167,15 +167,23 @@ packer.rollback = function (filename)
   end)()
 
 --- Initialize packer
+<<<<<<< HEAD
 ---@param user_config Config?
+=======
+---@param user_config Config
+>>>>>>> 4709a54 (Added packer.rollback + more EmmyLua docs)
 -- Forwards user configuration to sub-modules, resets the set of managed plugins, and ensures that
 -- the necessary package directories exist
 packer.init = function(user_config)
   user_config = user_config or {}
   config = util.deep_extend('force', config, user_config)
+<<<<<<< HEAD
+=======
+
+>>>>>>> 4709a54 (Added packer.rollback + more EmmyLua docs)
   packer.reset()
   config.package_root = vim.fn.fnamemodify(config.package_root, ':p')
-  local _
+
   config.package_root, _ = string.gsub(config.package_root, util.get_separator() .. '$', '', 1)
   config.pack_dir = util.join_paths(config.package_root, config.plugin_package)
   config.opt_dir = util.join_paths(config.pack_dir, 'opt')
@@ -188,7 +196,8 @@ packer.init = function(user_config)
   plugin_utils.ensure_dirs()
 
   if not config.disable_commands then
-    vim.cmd [[command! PackerSnapshot  lua require('packer').snapshot()]]
+    vim.cmd [[command! -nargs=+ PackerSnapshot  lua require('packer').snapshot(<q-args>)]]
+    vim.cmd [[command! -nargs=+ PackerRollback  lua require('packer').rollback(<q-args>)]]
     vim.cmd [[command! PackerInstall  lua require('packer').install()]]
     vim.cmd [[command! PackerUpdate   lua require('packer').update()]]
     vim.cmd [[command! PackerSync     lua require('packer').sync()]]
@@ -426,7 +435,6 @@ packer.update = function(...)
 
     await(a.main)
     update.fix_plugin_types(plugins, missing_plugins, results)
-    local _
     _, missing_plugins = util.partition(vim.tbl_keys(results.moves), missing_plugins)
     await(a.main)
     local tasks, display_win = install(plugins, missing_plugins, results)
@@ -703,6 +711,7 @@ packer.startup = function(spec)
   if config.snapshot ~= nil then
     packer.rollback(config.snapshot)
   end
+
   return packer
 end
 
