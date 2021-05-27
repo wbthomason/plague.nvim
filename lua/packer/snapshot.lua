@@ -7,10 +7,10 @@ local plugin_utils = require('packer.plugin_utils')
 
 local function cfg(_config) config = _config end
 
---- Makes a snapshot of all plugins to the path specified by filename
---- @param filename string
---- @param plugins Plugin[]
---- @return function
+---Makes a snapshot of all plugins to the path specified by filename
+---@param filename string
+---@param plugins Plugin[]
+---@return function
 local function do_snapshot(_, filename, plugins)
   return async(function()
     local raw_snapshot = ""
