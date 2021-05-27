@@ -35,7 +35,7 @@ end
 
 ---Gets HEAD commit's hash for `plugin`, nil if the plugin in not installed
 ---@param plugin Plugin
----@return string | nil
+---@return string?
 local get_rev = function(plugin)
   local plugin_name = util.get_plugin_full_name(plugin)
   local get_rev_cmd = config.exec_cmd .. fmt(config.subcommands.get_rev, plugin.install_path)

@@ -83,40 +83,46 @@ local config_defaults = {
 }
 
 local config = vim.tbl_extend('force', {}, config_defaults)
+---@type Plugin[]
 local plugins = nil
 local rocks = nil
-local plugins_snapshot = {}
 
---- Loads and parse snapshot file in the global variable plugins_snapshot
---@param filename path/to/snapshot
-packer.load_snapshot = function (filename)
-  local f_snapshot, err = io.open(filename, 'r+')
+--- Instantly rolls back to a previous state specified by `filename`
+---@param filename string
+packer.rollback = function (filename)
+  async(function ()
+    filename = util.join_paths(config.snapshot_path, filename)
+    local f_snapshot, err = io.open(filename, 'r+')
+    if err ~= nil then
+      log.info(err)
+    else
+      local plugins_snapshot = {}
+      for line in f_snapshot:lines() do
+        local short_name, commit = unpack(vim.split(line, ' '))
+        plugins_snapshot[short_name] = commit
+      end
+      f_snapshot:close()
+      print(vim.inspect(plugins))
+      for _, plugin in pairs(plugins) do
+        plugin.commit = plugins_snapshot[plugin.short_name]
+        if plugin.type ~= plugin_utils.custom_plugin_type then plugin_types[plugin.type].setup(plugin) end
+      end
 
-  if err ~= nil then
-    log.info(err)
-  else
-    for line in f_snapshot:lines() do
-      local short_name, commit = unpack(vim.split(line, ' '))
-      plugins_snapshot[short_name] = commit
     end
-    f_snapshot:close()
-  end
+  end)()
 end
 
 --- Initialize packer
+---@param user_config Config
 -- Forwards user configuration to sub-modules, resets the set of managed plugins, and ensures that
 -- the necessary package directories exist
 packer.init = function(user_config)
   user_config = user_config or {}
   config = util.deep_extend('force', config, user_config)
 
-  if user_config.snapshot ~= nil then
-    packer.load_snapshot(util.join_paths(config.snapshot_path, config.snapshot))
-  end
-
   packer.reset()
   config.package_root = vim.fn.fnamemodify(config.package_root, ':p')
-  local _
+
   config.package_root, _ = string.gsub(config.package_root, util.get_separator() .. '$', '', 1)
   config.pack_dir = util.join_paths(config.package_root, config.plugin_package)
   config.opt_dir = util.join_paths(config.pack_dir, 'opt')
@@ -130,6 +136,7 @@ packer.init = function(user_config)
 
   if not config.disable_commands then
     vim.cmd [[command! -nargs=+ PackerSnapshot  lua require('packer').snapshot(<q-args>)]]
+    vim.cmd [[command! -nargs=+ PackerRollback  lua require('packer').rollback(<q-args>)]]
     vim.cmd [[command! PackerInstall  lua require('packer').install()]]
     vim.cmd [[command! PackerUpdate   lua require('packer').update()]]
     vim.cmd [[command! PackerSync     lua require('packer').sync()]]
@@ -208,8 +215,6 @@ manage = function(plugin)
   plugin.short_name = name
   plugin.name = path
   plugin.path = path
-
-  plugin.commit = plugins_snapshot[plugin.short_name]
 
   -- Some config keys modify a plugin type
   if plugin.opt then
@@ -356,7 +361,6 @@ packer.update = function(...)
 
     await(a.main)
     update.fix_plugin_types(plugins, missing_plugins, results)
-    local _
     _, missing_plugins = util.partition(vim.tbl_keys(results.moves), missing_plugins)
     await(a.main)
     local tasks, display_win = install(plugins, missing_plugins, results)
@@ -560,7 +564,6 @@ packer.snapshot = function (filename)
     log.info(string.format("Taking snapshots of currently installed plugins to %s...", filename))
     filename = util.join_paths(config.snapshot_path, filename)
     await(snapshot(filename, plugins))
-    await(a.main)
     log.info("Snapshot complete")
     packer.on_complete()
   end)()
@@ -616,8 +619,12 @@ packer.startup = function(spec)
     end
   else
     packer.use(user_plugins)
-
   end
+
+  if user_config.snapshot ~= nil then
+    packer.rollback(util.join_paths(config.snapshot_path, config.snapshot))
+  end
+
   return packer
 end
 
