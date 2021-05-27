@@ -19,6 +19,8 @@ local fmt = string.format
 ---@field revert_last function get_rev()
 ---@field get_rev function
 ---@field type string
+---@field opt boolean
+---@field disable boolean
 
 local vim = vim
 
