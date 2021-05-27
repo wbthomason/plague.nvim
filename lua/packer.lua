@@ -28,7 +28,7 @@ local packer = {}
 ---@class Config
 local config_defaults = {
   snapshot = nil,
-  snapshot_path = util.join_paths(vim.fn.stdpath('cache'), 'plugin'),
+  snapshot_path = util.join_paths(vim.fn.stdpath('cache'), 'packer'),
   ensure_dependencies = true,
   package_root = util.join_paths(vim.fn.stdpath('data'), 'site', 'pack'),
   compile_path = util.join_paths(vim.fn.stdpath('config'), 'plugin', 'packer_compiled.vim'),
