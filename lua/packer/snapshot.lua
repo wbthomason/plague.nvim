@@ -37,9 +37,16 @@ local function do_snapshot(_, filename, plugins)
       end
     end
 
-    local file = io.open(filename, "w+")
-    file:write(raw_snapshot)
-    file:close()
+    local file, err = io.open(filename, "w+")
+    if err then
+        print(vim.inspect(err))
+    else
+        file:write(raw_snapshot)
+    end
+
+    if file ~= nil then
+        file:close()
+    end
   end)
 end
 

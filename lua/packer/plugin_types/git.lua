@@ -33,6 +33,30 @@ git.cfg = function(_config)
   config.exec_cmd = config.cmd .. ' '
 end
 
+---Gets HEAD commit's hash for `plugin`, nil if the plugin in not installed
+---@param plugin Plugin
+---@return string | nil
+local get_rev = function(plugin)
+  local plugin_name = util.get_plugin_full_name(plugin)
+  local get_rev_cmd = config.exec_cmd .. fmt(config.subcommands.get_rev, plugin.install_path)
+  return async(function ()
+    local r = await(jobs.run(get_rev_cmd, {capture_output = true})):
+      map_ok(function(ok)
+        return ok.output.data.stdout[1]
+      end):
+      map_err(function(err)
+        if not err.msg then
+          return {
+            msg = fmt('Error getting commit from %s: %s', plugin_name, table.concat(err, '\n')),
+            data = err,
+          }
+        end
+        return err
+      end)
+    return r
+  end)
+end
+
 local handle_checkouts = function(plugin, dest, disp)
   local plugin_name = util.get_plugin_full_name(plugin)
   return async(function()
@@ -349,22 +373,8 @@ git.setup = function(plugin)
 
   plugin.get_rev = function ()
     return async(function()
-      local get_rev_cmd = config.exec_cmd .. fmt(config.subcommands.get_rev, install_to)
-      local r = await(jobs.run(get_rev_cmd, {capture_output = true})):
-        map_ok(function(ok)
-          return ok.output.data.stdout[1]
-        end):
-        map_err(function(err)
-          if not err.msg then
-            return {
-              msg = fmt('Error getting commit from %s: %s', plugin_name, table.concat(err, '\n')),
-              data = err,
-            }
-          end
-          return err
-        end)
-      return r
-      end)
+      return await(get_rev(plugin)):map_ok(function (ok) return ok end)
+    end)
   end
 end
 
