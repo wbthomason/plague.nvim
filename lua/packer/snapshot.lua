@@ -6,19 +6,6 @@ local log = require('packer.log')
 local plugin_utils = require('packer.plugin_utils')
 
 local function cfg(_config) config = _config end
----@class Plugin
----@field 1 string
----@field commit string
----@field diff string
----@field short_name string
----@field path string
----@field install_path string
----@field updater function
----@field name string
----@field url string
----@field revert_last function
----@field get_rev function
----@field type string
 
 --- Makes a snapshot of all plugins to the path specified by filename
 --- @param filename string

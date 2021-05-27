@@ -529,9 +529,8 @@ packer.profile_output = function()
   end
 end
 
--- Load plugins
--- @param plugins string String of space separated plugins names
---                      intended for PackerLoad command
+---Load plugins
+---@param plugins_names string String of space separated plugins names intended for PackerLoad command
 packer.loader = function(plugins_names)
   local plugin_list = vim.tbl_filter(function(name) return #name > 0 end,
                                      vim.split(plugins_names, ' '))
