@@ -90,7 +90,10 @@ local rocks = nil
 --- Instantly rolls back to a previous state specified by `filename`
 ---@param filename string
 packer.rollback = function (filename)
+  local update_plugins = vim.tbl_keys(plugins)
   async(function ()
+    local start_time = vim.fn.reltime()
+    local results = {}
     filename = util.join_paths(config.snapshot_path, filename)
     local f_snapshot, err = io.open(filename, 'r+')
     if err ~= nil then
@@ -102,12 +105,32 @@ packer.rollback = function (filename)
         plugins_snapshot[short_name] = commit
       end
       f_snapshot:close()
-      print(vim.inspect(plugins))
+      --print(vim.inspect(plugins))
       for _, plugin in pairs(plugins) do
         plugin.commit = plugins_snapshot[plugin.short_name]
         if plugin.type ~= plugin_utils.custom_plugin_type then plugin_types[plugin.type].setup(plugin) end
       end
+      local missing = await(plugin_utils.find_missing_plugins(plugins))
+      local _, installed_plugins = util.partition(missing, update_plugins)
+      await(a.main)
+      local tasks, display_win =
+        update(plugins, installed_plugins, nil, results)
+      table.insert(tasks, 1, function() return not display.status.running end)
+      table.insert(tasks, 1, config.max_jobs and config.max_jobs or (#tasks - 1))
+      display_win:update_headline_message('updating ' .. #tasks - 2 .. ' / ' .. #tasks - 2
+        .. ' plugins')
+      a.interruptible_wait_pool(unpack(tasks))
+      local install_paths = {}
 
+      for plugin_name, r in pairs(results.updates) do
+        if r.ok then table.insert(install_paths, results.plugins[plugin_name].install_path) end
+      end
+
+      await(a.main)
+      plugin_utils.update_helptags(install_paths)
+      plugin_utils.update_rplugins()
+      local delta = string.gsub(vim.fn.reltimestr(vim.fn.reltime(start_time)), ' ', '')
+      display_win:final_results(results, delta)
     end
   end)()
 end
