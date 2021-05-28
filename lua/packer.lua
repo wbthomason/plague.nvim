@@ -83,7 +83,6 @@ local config_defaults = {
 }
 
 local config = vim.tbl_extend('force', {}, config_defaults)
----@type Plugin[]
 local plugins = nil
 local rocks = nil
 
@@ -159,7 +158,7 @@ packer.init = function(user_config)
 
   if not config.disable_commands then
     vim.cmd [[command! -nargs=+ PackerSnapshot  lua require('packer').snapshot(<q-args>)]]
-    vim.cmd [[command! -nargs=+ PackerRollback  lua require('packer').rollback(<q-args>)]]
+    vim.cmd [[command! -nargs=+ -complete=customlist,v:lua.require'packer'.rollback_complete PackerRollback  lua require('packer').rollback(<q-args>)]]
     vim.cmd [[command! PackerInstall  lua require('packer').install()]]
     vim.cmd [[command! PackerUpdate   lua require('packer').update()]]
     vim.cmd [[command! PackerSync     lua require('packer').sync()]]
@@ -577,6 +576,22 @@ packer.loader_complete = function(lead, _, _)
     if vim.startswith(name, lead) and not plugin.loaded then table.insert(completion_list, name) end
   end
   table.sort(completion_list)
+  return completion_list
+end
+
+--- Completion for listing snapshots in `snapshot_path`
+--- Intended to provide completion for PackerRollback command
+packer.rollback_complete = function(lead, _, _)
+  local completion_list = {}
+  local res = io.popen('ls ' .. config.snapshot_path , 'r')
+
+  for entry in res:lines() do
+    print(string.format("entry = %s, lead = %s", entry, lead))
+    if vim.startswith(entry, lead) then table.insert(completion_list, entry) end
+  end
+  res:close()
+  table.sort(completion_list)
+  print(vim.inspect(completion_list))
   return completion_list
 end
 
