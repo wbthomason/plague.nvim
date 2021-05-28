@@ -92,7 +92,6 @@ local config_defaults = {
 _G._packer = _G._packer or {}
 
 local config = vim.tbl_extend('force', {}, config_defaults)
----@type Plugin[]
 local plugins = nil
 local plugin_specifications = nil
 local rocks = nil
@@ -167,20 +166,12 @@ packer.rollback = function (filename)
   end)()
 
 --- Initialize packer
-<<<<<<< HEAD
 ---@param user_config Config?
-=======
----@param user_config Config
->>>>>>> 4709a54 (Added packer.rollback + more EmmyLua docs)
 -- Forwards user configuration to sub-modules, resets the set of managed plugins, and ensures that
 -- the necessary package directories exist
 packer.init = function(user_config)
   user_config = user_config or {}
   config = util.deep_extend('force', config, user_config)
-<<<<<<< HEAD
-=======
-
->>>>>>> 4709a54 (Added packer.rollback + more EmmyLua docs)
   packer.reset()
   config.package_root = vim.fn.fnamemodify(config.package_root, ':p')
 
@@ -197,7 +188,7 @@ packer.init = function(user_config)
 
   if not config.disable_commands then
     vim.cmd [[command! -nargs=+ PackerSnapshot  lua require('packer').snapshot(<q-args>)]]
-    vim.cmd [[command! -nargs=+ PackerRollback  lua require('packer').rollback(<q-args>)]]
+    vim.cmd [[command! -nargs=+ -complete=customlist,v:lua.require'packer'.rollback_complete PackerRollback  lua require('packer').rollback(<q-args>)]]
     vim.cmd [[command! PackerInstall  lua require('packer').install()]]
     vim.cmd [[command! PackerUpdate   lua require('packer').update()]]
     vim.cmd [[command! PackerSync     lua require('packer').sync()]]
