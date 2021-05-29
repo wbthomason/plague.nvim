@@ -92,6 +92,7 @@ local config_defaults = {
 _G._packer = _G._packer or {}
 
 local config = vim.tbl_extend('force', {}, config_defaults)
+---@type Plugin[]
 local plugins = nil
 local plugin_specifications = nil
 local rocks = nil
