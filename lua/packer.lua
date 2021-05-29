@@ -83,6 +83,7 @@ local config_defaults = {
 }
 
 local config = vim.tbl_extend('force', {}, config_defaults)
+---@type Plugin[]
 local plugins = nil
 local rocks = nil
 
@@ -104,7 +105,6 @@ packer.rollback = function (filename)
         plugins_snapshot[short_name] = commit
       end
       f_snapshot:close()
-      --print(vim.inspect(plugins))
       for _, plugin in pairs(plugins) do
         plugin.commit = plugins_snapshot[plugin.short_name]
         if plugin.type ~= plugin_utils.custom_plugin_type then plugin_types[plugin.type].setup(plugin) end
@@ -660,7 +660,7 @@ packer.startup = function(spec)
   end
 
   if user_config.snapshot ~= nil then
-    packer.rollback(util.join_paths(config.snapshot_path, config.snapshot))
+    packer.rollback(config.snapshot)
   end
 
   return packer
