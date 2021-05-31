@@ -659,7 +659,7 @@ packer.startup = function(spec)
     packer.use(user_plugins)
   end
 
-  if user_config.snapshot ~= nil then
+  if config.snapshot ~= nil then
     packer.rollback(config.snapshot)
   end
 
