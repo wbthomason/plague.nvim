@@ -1,34 +1,40 @@
+local a = require('plenary.async_lib.tests')
+local await = require('packer.async').wait
+local async = require('packer.async').sync
 local packer = require("packer")
-local path = require("plenary.path")
+local fmt = string.format
 local config = {
-    snapshot_path = vim.fn.stdpath("cache").."/packer/"
+    snapshot_path = vim.fn.stdpath("cache") .. "/" .. "packer"
 }
 
 describe("Packer snapshot tests", function()
-  after_each(function()
-    packer.reset()
-  end)
+  local spec = {"tjdevries/colorbuddy.vim"}
+  local short_name = 'colorbuddy'
+  local snapshot_name = 'test'
+  local test_path = config.snapshot_path .. "/" .. snapshot_name
+  local expected = {}
+  local actual = {}
+  expected.colorbuddy = '87c80e3'
 
-  it("PackerSnapshot: ", function ()
-    local spec = {"tjdevries/colorbuddy.vim"}
-    local short_name = 'colorbuddy'
-    local snapshot_name = 'test'
-    local test_path = path.joinpath(config.snapshot_path, snapshot_name)
-    local expected = {}
-    expected.colorbuddy = '87c80e3'
-    packer.startup(spec)
-    packer.install()
+  packer.startup(spec)
+  packer.install()
+
+  it(fmt("snapshot '%s' created", snapshot_name), function ()
     packer.snapshot(snapshot_name)
-    describe("snapshot exists", function ()
-      assert.True(path.exists(test_path))
-    end)
-    describe("snapshot is correctly formatted", function ()
-      assert.True(path.exists(test_path))
-    end)
+    assert.True(vim.fn.filereadable(config.snapshot_path))
   end)
 
-end)
+    --      it("snapshot is correctly formatted", function ()
+    --        local tmp = io.open(tostring(test_path), "r+")
+    --        local line = tmp:read("*l")
+    --        local plugin = line:sub(1,line:find(" "))
+    --        actual[plugin] = line:sub(line:find(" "), line:len())
+    --        assert.are.same(actual, expected)
+    --      end)
 
-describe("Packer snapshot rollback tests", function ()
-  print("prova")
+  --  describe("PackerRollback:", function ()
+  --    it("success", function ()
+  --      assert.True(true)
+  --    end)
+  --  end)
 end)
