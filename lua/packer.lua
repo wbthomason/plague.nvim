@@ -586,12 +586,10 @@ packer.rollback_complete = function(lead, _, _)
   local res = io.popen('ls ' .. config.snapshot_path , 'r')
 
   for entry in res:lines() do
-    print(string.format("entry = %s, lead = %s", entry, lead))
     if vim.startswith(entry, lead) then table.insert(completion_list, entry) end
   end
   res:close()
   table.sort(completion_list)
-  print(vim.inspect(completion_list))
   return completion_list
 end
 
