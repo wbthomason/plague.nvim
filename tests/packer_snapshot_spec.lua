@@ -1,4 +1,6 @@
 local a = require('plenary.async_lib.tests')
+local describe = require('plenary.busted').describe
+local it = require('plenary.busted').it
 local await = require('packer.async').wait
 local async = require('packer.async').sync
 local packer = require("packer")
@@ -17,14 +19,14 @@ a.describe("Packer snapshot tests", function()
   local actual = {}
   expected.colorbuddy = '87c80e3'
 
-  packer.startup(function ()
+  local _packer = packer.startup(function ()
     use(spec)
   end)
+    await(_packer.install())
 
   a.it(fmt("snapshot '%s' created", snapshot_name), function ()
-    await(packer.install())
-    await(packer.snapshot(snapshot_name))
-    assert.True(vim.fn.filereadable(config.snapshot_path))
+    await(_packer.snapshot(snapshot_name))
+    assert.True(vim.fn.filereadable(config.snapshot_path) == vim.v.True)
   end)
 
     --      it("snapshot is correctly formatted", function ()
