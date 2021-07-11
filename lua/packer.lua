@@ -1,6 +1,5 @@
 -- TODO: Performance analysis/tuning
 -- TODO: Merge start plugins?
-<<<<<<< HEAD
 local a = require('packer.async')
 local clean = require('packer.clean')
 local compile = require('packer.compile')
@@ -138,8 +137,7 @@ packer.rollback = function (filename)
     else
       local plugins_snapshot = {}
       for line in f_snapshot:lines() do
-        local short_name, commit = unpack(vim.split(line, ' '))
-        plugins_snapshot[short_name] = commit
+        local short_name, commit = unpack(vim.split(line, ' ')) plugins_snapshot[short_name] = commit
       end
       f_snapshot:close()
       for _, plugin in pairs(plugins) do
@@ -167,6 +165,7 @@ packer.rollback = function (filename)
       display_win:final_results(results, delta)
     end
   end)()
+end
 
 --- Initialize packer
 ---@param user_config Config?
