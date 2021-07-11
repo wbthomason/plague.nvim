@@ -6,6 +6,22 @@ local await = a.wait
 local async = a.sync
 local fmt = string.format
 
+---@class Plugin
+---@field 1 string
+---@field commit string
+---@field diff string
+---@field short_name string
+---@field path string
+---@field install_path string
+---@field updater function
+---@field name string
+---@field url string
+---@field revert_last function get_rev()
+---@field get_rev function
+---@field type string
+---@field opt boolean
+---@field disable boolean
+
 local vim = vim
 
 local git = {}
@@ -34,12 +50,37 @@ local function ensure_git_env()
 end
 
 local config = nil
+
 git.cfg = function(_config)
   config = _config.git
   config.base_dir = _config.package_root
   config.default_base_dir = util.join_paths(config.base_dir, _config.plugin_package)
   config.exec_cmd = config.cmd .. ' '
   ensure_git_env()
+end
+
+---Gets HEAD commit's hash for `plugin`, nil if the plugin in not installed
+---@param plugin Plugin
+---@return string
+local get_rev = function(plugin)
+  local plugin_name = util.get_plugin_full_name(plugin)
+  local get_rev_cmd = config.exec_cmd .. fmt(config.subcommands.get_rev, plugin.install_path)
+  return async(function()
+    local r = await(jobs.run(get_rev_cmd, { capture_output = true }))
+      :map_ok(function(ok)
+        return ok.output.data.stdout[1]
+      end)
+      :map_err(function(err)
+        if not err.msg then
+          return {
+            msg = fmt('Error getting commit from %s: %s', plugin_name, table.concat(err, '\n')),
+            data = err,
+          }
+        end
+        return err
+      end)
+    return r
+  end)
 end
 
 local handle_checkouts = function(plugin, dest, disp)
@@ -411,6 +452,14 @@ git.setup = function(plugin)
       return r
     end)()
     return r
+  end
+
+  plugin.get_rev = function()
+    return async(function()
+      return await(get_rev(plugin)):map_ok(function(ok)
+        return ok
+      end)
+    end)
   end
 end
 
